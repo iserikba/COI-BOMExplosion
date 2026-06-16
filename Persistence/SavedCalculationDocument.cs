@@ -1,32 +1,31 @@
-using System;
 using System.Collections.Generic;
 
 namespace ProductionCalculator.Core.Persistence
 {
-    // Token: 0x0200000D RID: 13
+    /// <summary>
+    /// The root object that gets serialized to disk when a user saves their production setup.
+    /// </summary>
     public sealed class SavedCalculationDocument
     {
-        // Token: 0x1700000A RID: 10
-        // (get) Token: 0x0600005F RID: 95 RVA: 0x0000406F File Offset: 0x0000226F
-        // (set) Token: 0x06000060 RID: 96 RVA: 0x00004077 File Offset: 0x00002277
-        public int Version { get; set; } = 1;
+        // Increment this version if you ever change the data structure in a way 
+        // that breaks backward compatibility for old saved files.
+        public const int CurrentVersion = 1;
 
-        // Token: 0x1700000B RID: 11
-        // (get) Token: 0x06000061 RID: 97 RVA: 0x00004080 File Offset: 0x00002280
-        // (set) Token: 0x06000062 RID: 98 RVA: 0x00004088 File Offset: 0x00002288
+        public int Version { get; set; } = CurrentVersion;
+
+        /// <summary>
+        /// A friendly name the user gave to this calculation (e.g., "Steel Smelting Setup").
+        /// </summary>
         public string Name { get; set; }
 
-        // Token: 0x1700000C RID: 12
-        // (get) Token: 0x06000063 RID: 99 RVA: 0x00004091 File Offset: 0x00002291
-        // (set) Token: 0x06000064 RID: 100 RVA: 0x00004099 File Offset: 0x00002299
+        /// <summary>
+        /// The ID of the primary product to show in the UI icon for this saved file.
+        /// </summary>
         public string IconProductId { get; set; }
 
-        // Token: 0x1700000D RID: 13
-        // (get) Token: 0x06000065 RID: 101 RVA: 0x000040A2 File Offset: 0x000022A2
-        // (set) Token: 0x06000066 RID: 102 RVA: 0x000040AA File Offset: 0x000022AA
+        /// <summary>
+        /// The list of target rows that reconstruct the production chain.
+        /// </summary>
         public List<SavedTargetRowData> Rows { get; set; } = new List<SavedTargetRowData>();
-
-        // Token: 0x04000057 RID: 87
-        public const int CurrentVersion = 1;
     }
 }

@@ -6,100 +6,109 @@ using Mafi.Core.Products;
 
 namespace ProductionCalculator.Core.Calculation
 {
-	// Token: 0x02000014 RID: 20
-	internal static class FlowTotalsAggregator
-	{
-		// Token: 0x060000AF RID: 175 RVA: 0x00005554 File Offset: 0x00003754
-		public static Fix32 ComputeNetRate(Fix32 primary, Fix32 subtract)
-		{
-			if (primary <= Fix32.Zero)
-			{
-				return Fix32.Zero;
-			}
-			if (subtract <= Fix32.Zero)
-			{
-				return FlowTotalsAggregator.sanitizePositiveNet(primary);
-			}
-			Fix32 fix = (primary > subtract) ? (primary - subtract) : (subtract - primary);
-			if (fix <= FlowTotalsAggregator.s_balanceTolerance)
-			{
-				return Fix32.Zero;
-			}
-			Fix32 fix2 = primary - subtract;
-			if (fix2 <= Fix32.Zero)
-			{
-				return Fix32.Zero;
-			}
-			return FlowTotalsAggregator.sanitizePositiveNet(fix2);
-		}
+    /// <summary>
+    /// A utility class for combining and filtering production rates.
+    /// It handles floating-point/fixed-point stabilization, ensuring that 
+    /// microscopic rounding errors don't show up in the UI.
+    /// </summary>
+    internal static class FlowTotalsAggregator
+    {
+        // By discarding any net rates under 0.05/min, we prevent "ghost" items
+        // from appearing in the UI due to tiny math rounding errors in the engine.
+        private static readonly Fix32 s_balanceTolerance = Fix32.FromFloat(0.05f);
+        private static readonly Fix32 s_absoluteMinNetRate = Fix32.FromFloat(0.05f);
+        private static readonly Fix32 s_displayRateStep = Fix32.FromFloat(0.01f);
 
-		// Token: 0x060000B0 RID: 176 RVA: 0x000055D8 File Offset: 0x000037D8
-		private static Fix32 sanitizePositiveNet(Fix32 net)
-		{
-			Fix32 fix = FlowTotalsAggregator.roundToDisplayStep(net);
-			if (fix <= Fix32.Zero || fix < FlowTotalsAggregator.s_absoluteMinNetRate)
-			{
-				return Fix32.Zero;
-			}
-			return fix;
-		}
+        /// <summary>
+        /// Calculates the net production rate (primary - subtract).
+        /// Contains strict tolerance checks to safely balance out inputs and outputs.
+        /// </summary>
+        public static Fix32 ComputeNetRate(Fix32 primary, Fix32 subtract)
+        {
+            if (primary <= Fix32.Zero) return Fix32.Zero;
+            if (subtract <= Fix32.Zero) return SanitizePositiveNet(primary);
 
-		// Token: 0x060000B1 RID: 177 RVA: 0x0000560D File Offset: 0x0000380D
-		private static Fix32 roundToDisplayStep(Fix32 value)
-		{
-			if (value <= Fix32.Zero)
-			{
-				return Fix32.Zero;
-			}
-			return Fix32.FromFloat((float)(Math.Round((double)(value.ToFloat() / FlowTotalsAggregator.s_displayRateStep.ToFloat())) * (double)FlowTotalsAggregator.s_displayRateStep.ToFloat()));
-		}
+            // Calculate the absolute difference between what is produced and what is consumed
+            Fix32 absoluteDifference = (primary > subtract) ? (primary - subtract) : (subtract - primary);
 
-		// Token: 0x060000B2 RID: 178 RVA: 0x0000564C File Offset: 0x0000384C
-		public static void AddRate(Dictionary<ProductProto, Fix32> rates, ProductProto product, Fix32 perMinute)
-		{
-			if (product == null || perMinute == Fix32.Zero)
-			{
-				return;
-			}
-			Fix32 fix;
-			if (rates.TryGetValue(product, out fix))
-			{
-				rates[product] = fix + perMinute;
-				return;
-			}
-			rates.Add(product, perMinute);
-		}
+            // CRITICAL LOGIC: The "Balance Tolerance"
+            // If a factory produces 10.0001 Water and consumes 10.0 Water, we don't want 
+            // the UI demanding an input of exactly 0.0001 Water. We treat it as perfectly balanced.
+            if (absoluteDifference <= s_balanceTolerance) return Fix32.Zero;
 
-		// Token: 0x060000B3 RID: 179 RVA: 0x00005694 File Offset: 0x00003894
-		public static ImmutableArray<ProductFlowTotals> ToSortedTotals(Dictionary<ProductProto, Fix32> rates)
-		{
-			if (rates.Count == 0)
-			{
-				return ImmutableArray<ProductFlowTotals>.Empty;
-			}
-			List<ProductFlowTotals> list = new List<ProductFlowTotals>(rates.Count);
-			foreach (KeyValuePair<ProductProto, Fix32> keyValuePair in rates)
-			{
-				if (!(keyValuePair.Value <= Fix32.Zero))
-				{
-					list.Add(new ProductFlowTotals(keyValuePair.Key, keyValuePair.Value));
-				}
-			}
-			if (list.Count == 0)
-			{
-				return ImmutableArray<ProductFlowTotals>.Empty;
-			}
-			list.Sort((ProductFlowTotals left, ProductFlowTotals right) => string.Compare(left.Product.Id.Value, right.Product.Id.Value, StringComparison.Ordinal));
-			return ImmutableArray.ToImmutableArray<ProductFlowTotals>(list);
-		}
+            // If we are producing more than we are consuming, calculate the true net output
+            Fix32 net = primary - subtract;
+            if (net <= Fix32.Zero) return Fix32.Zero;
 
-		// Token: 0x0400006E RID: 110
-		private static readonly Fix32 s_balanceTolerance = Fix32.FromFloat(0.05f);
+            return SanitizePositiveNet(net);
+        }
 
-		// Token: 0x0400006F RID: 111
-		private static readonly Fix32 s_absoluteMinNetRate = Fix32.FromFloat(0.05f);
+        private static Fix32 SanitizePositiveNet(Fix32 net)
+        {
+            Fix32 roundedNet = RoundToDisplayStep(net);
 
-		// Token: 0x04000070 RID: 112
-		private static readonly Fix32 s_displayRateStep = Fix32.FromFloat(0.01f);
-	}
+            // Final safety net: if the rounding pushed it below our minimum threshold, discard it.
+            if (roundedNet <= Fix32.Zero || roundedNet < s_absoluteMinNetRate)
+            {
+                return Fix32.Zero;
+            }
+
+            return roundedNet;
+        }
+
+        private static Fix32 RoundToDisplayStep(Fix32 value)
+        {
+            if (value <= Fix32.Zero) return Fix32.Zero;
+
+            // Note: Converting Mafi's deterministic Fix32 into standard float for display rounding.
+            // This is safe because this mod is "IsUiOnly = true" and doesn't affect the physical game state.
+            double valFloat = value.ToFloat();
+            double stepFloat = s_displayRateStep.ToFloat();
+
+            return Fix32.FromFloat((float)(Math.Round(valFloat / stepFloat) * stepFloat));
+        }
+
+        /// <summary>
+        /// Accumulates the rate of a specific product in a dictionary.
+        /// </summary>
+        public static void AddRate(Dictionary<ProductProto, Fix32> rates, ProductProto product, Fix32 perMinute)
+        {
+            if (product == null || perMinute == Fix32.Zero) return;
+
+            // Modern C# dictionary lookup pattern
+            if (rates.TryGetValue(product, out Fix32 existingRate))
+            {
+                rates[product] = existingRate + perMinute;
+            }
+            else
+            {
+                rates.Add(product, perMinute);
+            }
+        }
+
+        /// <summary>
+        /// Converts the raw dictionary into a clean, sorted, immutable list ready for the UI to render.
+        /// </summary>
+        public static ImmutableArray<ProductFlowTotals> ToSortedTotals(Dictionary<ProductProto, Fix32> rates)
+        {
+            if (rates.Count == 0) return ImmutableArray<ProductFlowTotals>.Empty;
+
+            var validTotals = new List<ProductFlowTotals>(rates.Count);
+
+            foreach (var kvp in rates)
+            {
+                if (kvp.Value > Fix32.Zero)
+                {
+                    validTotals.Add(new ProductFlowTotals(kvp.Key, kvp.Value));
+                }
+            }
+
+            if (validTotals.Count == 0) return ImmutableArray<ProductFlowTotals>.Empty;
+
+            // Sort alphabetically by the product's internal string ID so the UI list never randomly shuffles.
+            validTotals.Sort((left, right) => string.Compare(left.Product.Id.Value, right.Product.Id.Value, StringComparison.Ordinal));
+
+            return validTotals.ToImmutableArray();
+        }
+    }
 }

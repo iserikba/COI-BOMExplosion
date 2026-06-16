@@ -1,42 +1,25 @@
-﻿using System;
-using Mafi;
+﻿using Mafi;
 using Mafi.Collections.ImmutableCollections;
 using Mafi.Core.Products;
 
 namespace ProductionCalculator.Core.Calculation
 {
-    // Token: 0x02000016 RID: 22
+    /// <summary>
+    /// The final result of a production chain calculation.
+    /// This holds the entire breakdown of inputs, outputs, and building requirements.
+    /// </summary>
     public sealed class ProductionChainResult
     {
-        // Token: 0x1700001C RID: 28
-        // (get) Token: 0x060000B8 RID: 184 RVA: 0x000057AB File Offset: 0x000039AB
         public ImmutableArray<ProductionTarget> Targets { get; }
-
-        // Token: 0x1700001D RID: 29
-        // (get) Token: 0x060000B9 RID: 185 RVA: 0x000057B3 File Offset: 0x000039B3
         public ImmutableArray<RecipeBuildingTotals> Buildings { get; }
-
-        // Token: 0x1700001E RID: 30
-        // (get) Token: 0x060000BA RID: 186 RVA: 0x000057BB File Offset: 0x000039BB
         public ImmutableArray<ProductFlowTotals> RawInputs { get; }
-
-        // Token: 0x1700001F RID: 31
-        // (get) Token: 0x060000BB RID: 187 RVA: 0x000057C3 File Offset: 0x000039C3
         public ImmutableArray<ProductFlowTotals> TotalOutputs { get; }
-
-        // Token: 0x17000020 RID: 32
-        // (get) Token: 0x060000BC RID: 188 RVA: 0x000057CB File Offset: 0x000039CB
         public ImmutableArray<ProductFlowTotals> GrossProduction { get; }
-
-        // Token: 0x17000021 RID: 33
-        // (get) Token: 0x060000BD RID: 189 RVA: 0x000057D3 File Offset: 0x000039D3
         public ImmutableArray<ProductFlowTotals> GrossConsumption { get; }
 
-        // Token: 0x17000022 RID: 34
-        // (get) Token: 0x060000BE RID: 190 RVA: 0x000057DB File Offset: 0x000039DB
+        // Static factory to represent a cleared calculation
         public static ProductionChainResult Empty { get; } = new ProductionChainResult();
 
-        // Token: 0x060000BF RID: 191 RVA: 0x000057E4 File Offset: 0x000039E4
         private ProductionChainResult()
         {
             this.Targets = ImmutableArray<ProductionTarget>.Empty;
@@ -47,8 +30,13 @@ namespace ProductionCalculator.Core.Calculation
             this.GrossConsumption = ImmutableArray<ProductFlowTotals>.Empty;
         }
 
-        // Token: 0x060000C0 RID: 192 RVA: 0x00005839 File Offset: 0x00003A39
-        public ProductionChainResult(ImmutableArray<ProductionTarget> targets, ImmutableArray<RecipeBuildingTotals> buildings, ImmutableArray<ProductFlowTotals> rawInputs, ImmutableArray<ProductFlowTotals> totalOutputs, ImmutableArray<ProductFlowTotals> grossProduction, ImmutableArray<ProductFlowTotals> grossConsumption)
+        public ProductionChainResult(
+            ImmutableArray<ProductionTarget> targets,
+            ImmutableArray<RecipeBuildingTotals> buildings,
+            ImmutableArray<ProductFlowTotals> rawInputs,
+            ImmutableArray<ProductFlowTotals> totalOutputs,
+            ImmutableArray<ProductFlowTotals> grossProduction,
+            ImmutableArray<ProductFlowTotals> grossConsumption)
         {
             this.Targets = targets;
             this.Buildings = buildings;
@@ -58,24 +46,25 @@ namespace ProductionCalculator.Core.Calculation
             this.GrossConsumption = grossConsumption;
         }
 
-        // Token: 0x060000C1 RID: 193 RVA: 0x0000586E File Offset: 0x00003A6E
+        /// <summary>
+        /// Used by the UI to help users sync their production rates by 
+        /// looking up what the current calculation suggests for a product.
+        /// </summary>
         public bool TryGetSuggestedRateForFlow(ProductProto product, ProductionRowFlow flow, out Fix32 rate)
         {
-            if (flow != ProductionRowFlow.Input)
-            {
-                return ProductionChainResult.tryFindRate(this.GrossConsumption, product, out rate);
-            }
-            return ProductionChainResult.tryFindRate(this.GrossProduction, product, out rate);
+            // If the user is defining an Input, we suggest the rate based on Gross Production
+            // If the user is defining an Output, we suggest the rate based on Gross Consumption
+            var source = (flow == ProductionRowFlow.Input) ? this.GrossProduction : this.GrossConsumption;
+            return TryFindRate(source, product, out rate);
         }
 
-        // Token: 0x060000C2 RID: 194 RVA: 0x00005890 File Offset: 0x00003A90
-        private static bool tryFindRate(ImmutableArray<ProductFlowTotals> flows, ProductProto product, out Fix32 rate)
+        private static bool TryFindRate(ImmutableArray<ProductFlowTotals> flows, ProductProto product, out Fix32 rate)
         {
-            foreach (ProductFlowTotals productFlowTotals in flows)
+            foreach (var flow in flows)
             {
-                if (productFlowTotals.Product == product)
+                if (flow.Product == product)
                 {
-                    rate = productFlowTotals.PerMinute;
+                    rate = flow.PerMinute;
                     return true;
                 }
             }

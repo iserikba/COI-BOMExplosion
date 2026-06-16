@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Mafi.Collections.ImmutableCollections;
+using Mafi.Core.Buildings.Farms;
 using Mafi.Core.Factory.Machines;
 using Mafi.Core.Factory.Recipes;
 using Mafi.Core.Products;
@@ -22,6 +23,7 @@ namespace ProductionCalculator.Core.Catalog
         private Dictionary<ProductProto, ImmutableArray<RecipeProto>> m_recipesByOutput;
         private Dictionary<ProductProto, ImmutableArray<RecipeProto>> m_recipesByInput;
         private Dictionary<RecipeProto, MachineProto> m_machineByRecipe = new Dictionary<RecipeProto, MachineProto>();
+        private Dictionary<RecipeProto, FarmProto> m_farmByRecipe = new Dictionary<RecipeProto, FarmProto>();
 
         public RecipeCatalog(ProtosDb protosDb)
         {
@@ -40,6 +42,7 @@ namespace ProductionCalculator.Core.Catalog
             var byInput = new Dictionary<ProductProto, List<RecipeProto>>();
 
             this.m_machineByRecipe = new Dictionary<RecipeProto, MachineProto>();
+            this.m_farmByRecipe = new Dictionary<RecipeProto, FarmProto>();
 
             // 1. Index Machines: Map every recipe to the machine that runs it.
             foreach (MachineProto machine in this.m_protosDb.All<MachineProto>())
@@ -50,6 +53,7 @@ namespace ProductionCalculator.Core.Catalog
                         this.m_machineByRecipe[recipe] = machine;
                 }
             }
+
 
             // 2. Index Recipes: Build the Input and Output dictionary maps.
             foreach (RecipeProto recipe in this.m_protosDb.All<RecipeProto>())
@@ -62,6 +66,16 @@ namespace ProductionCalculator.Core.Catalog
                 }
             }
 
+            // 3. Index Farm : Build the Input and Output dictionary maps.
+            foreach (FarmProto farm in this.m_protosDb.All<FarmProto>())
+            {
+                foreach (RecipeProto recipe in farm.Recipes)
+                {
+                    if (recipe != null && !this.m_farmByRecipe.ContainsKey(recipe)) 
+                        this.m_farmByRecipe[recipe] = farm;
+                }
+            }
+
             this.m_allRecipes = recipeList.ToImmutableArray();
             this.m_recipesByOutput = buildLookup(byOutput);
             this.m_recipesByInput = buildLookup(byInput);
@@ -69,6 +83,8 @@ namespace ProductionCalculator.Core.Catalog
 
         public MachineProto GetMachineForRecipe(RecipeProto recipe) =>
             recipe != null && this.m_machineByRecipe.TryGetValue(recipe, out var machine) ? machine : null;
+        public FarmProto GetFarmForRecipe(RecipeProto recipe) =>
+            recipe != null && this.m_farmByRecipe.TryGetValue(recipe, out var farm) ? farm : null;
 
         public bool IsCraftable(ProductProto product) => this.GetRecipesProducing(product).IsNotEmpty;
 

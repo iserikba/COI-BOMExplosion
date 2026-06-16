@@ -17,6 +17,7 @@ namespace ProductionCalculator
         public static readonly LocStr OutputsTitle = Loc.Str("ProductionCalculator__OutputsTitle", "Target recipe outputs per month", "section title for outputs of the selected target recipe only");
         public static readonly LocStr NoTargets = Loc.Str("ProductionCalculator__NoTargets", "Add at least one product with a production rate.", "hint when no valid production rows are configured");
         public static readonly LocStr NoResults = Loc.Str("ProductionCalculator__NoResults", "No production chain could be calculated for the selected products.", "hint when calculation returns empty result");
+        public static readonly LocStr ClickToExplore = Loc.Str("ProductionCalculator__ClickToExplore", "Click to explore its recipe.", "tooltip hint for clickable products");
 
         // --- Buttons & Inputs ---
         public static readonly LocStr AddTarget = Loc.Str("ProductionCalculator__AddTarget", "Add product", "button to add another production row");

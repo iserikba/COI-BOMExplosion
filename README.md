@@ -24,11 +24,3 @@ This project refactors and optimizes the production calculation logic to provide
 * **Performance-First:** Designed to minimize Garbage Collection (GC) pressure, ensuring the mod remains invisible to the game's main simulation tick.
 * **Modular Architecture:** Separates the calculation math (`Core.Calculation`) from the visualization layer (`UI`), allowing for easy expansion.
 * **Extensible:** Built with future-proofing in mind, making it simple to inject new metrics like power consumption, labor force, and maintenance costs into existing chain calculations.
-
----
-
-### Pro-Tip for your GitHub `README.md`
-
-If you are planning to host this on GitHub, I recommend adding a **"How to Contribute"** section. Since you've put so much work into cleaning up the code, you might want to invite others to help you add those electricity and worker metrics!
-
-Does this description capture the technical nature of the project while keeping that sense of humor about the name?
