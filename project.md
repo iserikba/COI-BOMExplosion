@@ -71,6 +71,72 @@ RecipeCatalog.Refresh: Farm recipe RecipeForUiData Product_Water 0 -> Product_Tr
 RecipeCatalog.Refresh: Farm recipe RecipeForUiData Product_Water 0 -> Product_Soybean 0 for 2400/days 
 RecipeCatalog.Refresh: Farm recipe RecipeForUiData Product_Water 0 -> Product_Vegetables 0 for 2400/days 
 
+Log.Info($"Crop {crop.ProductProduced.Product.Id} q:{crop.ProductProduced.Quantity} ConsumedWaterPerDay: {crop.ConsumedWaterPerDay.Value.ToString()}" +
+                   $" ConsumedFertilityPerDay: {crop.ConsumedFertilityPerDay.ToFloat()}, DaysToGrow {crop.DaysToGrow}");
+
+Crop __PHANTOM__PRODUCT__ q:0 ConsumedWaterPerDay: 0 ConsumedFertilityPerDay: 0, DaysToGrow 90
+Crop __PHANTOM__PRODUCT__ q:0 ConsumedWaterPerDay: 0.9003906 ConsumedFertilityPerDay: -0.0012, DaysToGrow 60
+Crop Product_Potato  q:58 ConsumedWaterPerDay: 1.200195 ConsumedFertilityPerDay: 0.0035, DaysToGrow 90
+Crop Product_Corn    q:66 ConsumedWaterPerDay: 1.330078 ConsumedFertilityPerDay: 0.004, DaysToGrow 120
+Crop Product_Wheat q:58 ConsumedWaterPerDay: 1.05957 ConsumedFertilityPerDay: 0.0035, DaysToGrow 180
+Crop Product_TreeSapling q:60 ConsumedWaterPerDay: 0.9003906 ConsumedFertilityPerDay: 0.002, DaysToGrow 360
+Crop Product_Soybean q:22 ConsumedWaterPerDay: 1.200195 ConsumedFertilityPerDay: 0.005, DaysToGrow 120
+Crop Product_SugarCane q:198 ConsumedWaterPerDay: 1.599609 ConsumedFertilityPerDay: 0.005, DaysToGrow 270
+Crop Product_Vegetables q:60 ConsumedWaterPerDay: 1.070313 ConsumedFertilityPerDay: 0.0035, DaysToGrow 120
+Crop Product_Fruit q:80 ConsumedWaterPerDay: 1.330078 ConsumedFertilityPerDay: 0.003, DaysToGrow 240
+Crop Product_Canola q:36 ConsumedWaterPerDay: 0.9296875 ConsumedFertilityPerDay: 0.003, DaysToGrow 90
+Crop Product_Poppy q:25 ConsumedWaterPerDay: 0.9003906 ConsumedFertilityPerDay: 0.003, DaysToGrow 120
+Crop Product_Flowers q:24 ConsumedWaterPerDay: 1.5 ConsumedFertilityPerDay: 0.005, DaysToGrow 120
+
+I 02:54:10,831 S------ ~Mai: Crop __PHANTOM__PRODUCT__ q:0 ConsumedWaterPerDay: 0 ConsumedFertilityPerDay: 0, DaysToGrow 90
+I 02:54:10,831 S------ ~Mai: Crop __PHANTOM__PRODUCT__ q:0 ConsumedWaterPerDay: 0.9003906 ConsumedFertilityPerDay: -0.0012, DaysToGrow 60
+I 02:54:10,831 S------ ~Mai: Crop Product_Potato q:58 ConsumedWaterPerDay: 1.200195 ConsumedFertilityPerDay: 0.0035, DaysToGrow 90
+I 02:54:10,831 S------ ~Mai: Crop Product_Corn q:66 ConsumedWaterPerDay: 1.330078 ConsumedFertilityPerDay: 0.004, DaysToGrow 120
+I 02:54:10,831 S------ ~Mai: Crop Product_Wheat q:58 ConsumedWaterPerDay: 1.05957 ConsumedFertilityPerDay: 0.0035, DaysToGrow 180
+I 02:54:10,831 S------ ~Mai: Crop Product_TreeSapling q:60 ConsumedWaterPerDay: 0.9003906 ConsumedFertilityPerDay: 0.002, DaysToGrow 360
+I 02:54:10,831 S------ ~Mai: Crop Product_Soybean q:22 ConsumedWaterPerDay: 1.200195 ConsumedFertilityPerDay: 0.005, DaysToGrow 120
+I 02:54:10,831 S------ ~Mai: Crop Product_SugarCane q:198 ConsumedWaterPerDay: 1.599609 ConsumedFertilityPerDay: 0.005, DaysToGrow 270
+I 02:54:10,831 S------ ~Mai: Crop Product_Vegetables q:60 ConsumedWaterPerDay: 1.070313 ConsumedFertilityPerDay: 0.0035, DaysToGrow 120
+I 02:54:10,831 S------ ~Mai: Crop Product_Fruit q:80 ConsumedWaterPerDay: 1.330078 ConsumedFertilityPerDay: 0.003, DaysToGrow 240
+I 02:54:10,831 S------ ~Mai: Crop Product_Canola q:36 ConsumedWaterPerDay: 0.9296875 ConsumedFertilityPerDay: 0.003, DaysToGrow 90
+I 02:54:10,831 S------ ~Mai: Crop Product_Poppy q:25 ConsumedWaterPerDay: 0.9003906 ConsumedFertilityPerDay: 0.003, DaysToGrow 120
+I 02:54:10,831 S------ ~Mai: Crop Product_Flowers q:24 ConsumedWaterPerDay: 1.5 ConsumedFertilityPerDay: 0.005, DaysToGrow 120
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT4_Crop_Potato waterPerDay = 1.5 Recipe: 135 dailyFertility = 0.44% Recipe: 18 Prod: 29 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT4_Crop_Corn waterPerDay = 1.663086 Recipe: 199 dailyFertility = 0.50% Recipe: 30 Prod: 24 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT4_Crop_Wheat waterPerDay = 1.324219 Recipe: 238 dailyFertility = 0.44% Recipe: 36 Prod: 14 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT4_Crop_TreeSapling waterPerDay = 1.125977 Recipe: 405 dailyFertility = 0.25% Recipe: 54 Prod: 7 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT4_Crop_Soybeans waterPerDay = 1.5 Recipe: 180 dailyFertility = 0.63% Recipe: 36 Prod: 8 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT4_Crop_SugarCane waterPerDay = 2 Recipe: 540 dailyFertility = 0.63% Recipe: 81 Prod: 33 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT4_Crop_Vegetables waterPerDay = 1.337891 Recipe: 160 dailyFertility = 0.44% Recipe: 24 Prod: 22 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT4_Crop_Fruits waterPerDay = 1.663086 Recipe: 399 dailyFertility = 0.38% Recipe: 48 Prod: 15 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT4_Crop_Canola waterPerDay = 1.162109 Recipe: 104 dailyFertility = 0.38% Recipe: 18 Prod: 18 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT4_Crop_Poppy waterPerDay = 1.125977 Recipe: 135 dailyFertility = 0.38% Recipe: 24 Prod: 9 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT4_Crop_Flowers waterPerDay = 1.875 Recipe: 225 dailyFertility = 0.63% Recipe: 36 Prod: 9 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT3_Crop_Potato waterPerDay = 1.350586 Recipe: 121 dailyFertility = 0.39% Recipe: 18 Prod: 24 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT3_Crop_Corn waterPerDay = 1.496094 Recipe: 179 dailyFertility = 0.45% Recipe: 30 Prod: 20 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT3_Crop_Wheat waterPerDay = 1.192383 Recipe: 214 dailyFertility = 0.39% Recipe: 36 Prod: 12 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT3_Crop_TreeSapling waterPerDay = 1.012695 Recipe: 364 dailyFertility = 0.22% Recipe: 36 Prod: 6 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT3_Crop_Soybeans waterPerDay = 1.350586 Recipe: 162 dailyFertility = 0.56% Recipe: 36 Prod: 7 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT3_Crop_SugarCane waterPerDay = 1.799805 Recipe: 485 dailyFertility = 0.56% Recipe: 81 Prod: 27 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT3_Crop_Vegetables waterPerDay = 1.204102 Recipe: 144 dailyFertility = 0.39% Recipe: 24 Prod: 18 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT3_Crop_Fruits waterPerDay = 1.496094 Recipe: 359 dailyFertility = 0.34% Recipe: 36 Prod: 12 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT3_Crop_Canola waterPerDay = 1.045898 Recipe: 94 dailyFertility = 0.34% Recipe: 13 Prod: 15 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT3_Crop_Poppy waterPerDay = 1.012695 Recipe: 121 dailyFertility = 0.34% Recipe: 18 Prod: 7 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT3_Crop_Flowers waterPerDay = 1.6875 Recipe: 202 dailyFertility = 0.56% Recipe: 36 Prod: 7 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT2_Crop_Potato waterPerDay = 1.200195 Recipe: 108 dailyFertility = 0.35% Recipe: 18 Prod: 19 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT2_Crop_Corn waterPerDay = 1.330078 Recipe: 159 dailyFertility = 0.40% Recipe: 24 Prod: 16 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT2_Crop_Wheat waterPerDay = 1.05957 Recipe: 190 dailyFertility = 0.35% Recipe: 36 Prod: 9 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT2_Crop_TreeSapling waterPerDay = 0.9003906 Recipe: 324 dailyFertility = 0.20% Recipe: 36 Prod: 5 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT2_Crop_Soybeans waterPerDay = 1.200195 Recipe: 144 dailyFertility = 0.50% Recipe: 30 Prod: 5 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT2_Crop_Vegetables waterPerDay = 1.070313 Recipe: 128 dailyFertility = 0.35% Recipe: 24 Prod: 15 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT2_Crop_Canola waterPerDay = 0.9296875 Recipe: 83 dailyFertility = 0.30% Recipe: 13 Prod: 12 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT1_Crop_Potato waterPerDay = 1.200195 Recipe: 108 dailyFertility = 0.35% Recipe: 18 Prod: 19 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT1_Crop_Corn waterPerDay = 1.330078 Recipe: 159 dailyFertility = 0.40% Recipe: 24 Prod: 16 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT1_Crop_Wheat waterPerDay = 1.05957 Recipe: 190 dailyFertility = 0.35% Recipe: 36 Prod: 9 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT1_Crop_TreeSapling waterPerDay = 0.9003906 Recipe: 324 dailyFertility = 0.20% Recipe: 36 Prod: 5 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT1_Crop_Soybeans waterPerDay = 1.200195 Recipe: 144 dailyFertility = 0.50% Recipe: 30 Prod: 5 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT1_Crop_Vegetables waterPerDay = 1.070313 Recipe: 128 dailyFertility = 0.35% Recipe: 24 Prod: 15 
+I 02:54:10,832 S------ ~Mai: VirtualRecipe_FarmT1_Crop_Canola waterPerDay = 0.9296875 Recipe: 83 dailyFertility = 0.30% Recipe: 13 Prod: 12 
 
             //// Keep your original Farm loop just to map the farms, but WITHOUT the json dump
             //foreach (FarmProto farm in this.m_protosDb.All<FarmProto>())
@@ -99,8 +165,8 @@ RecipeCatalog.Refresh: Farm recipe RecipeForUiData Product_Water 0 -> Product_Ve
                     string s = string.Join(", ", uiRecipe.AllUserVisibleInputs.Select(p => p.Product.Id.Value +" "+ p.Quantity)) +  
                        " -> " + string.Join(", ", uiRecipe.AllUserVisibleOutputs.Select(p => p.Product.Id.Value + " " + p.Quantity));
 
-                    Log.Info($"RecipeCatalog.Refresh: Farm recipe {uiRecipe.Id} {s} for {uiRecipe.Duration}/days ");                    //Log.Info("RecipeCatalog.Refresh: Recipe " + JsonConvert.SerializeObject(uiRecipe, settings));
-                    
+                    Log.Info($"RecipeCatalog.Refresh: Farm recipe {uiRecipe.Id} {s} for {uiRecipe.Duration}/days ");                    
+                                     
                     // Safely check if it can be cast to RecipeProto
                     if (uiRecipe is RecipeProto recipe)
                     {

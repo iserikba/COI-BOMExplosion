@@ -138,65 +138,87 @@ namespace ProductionCalculator.Core.Catalog
         // We use Mafi's Fix32 for safe deterministic math.
         Fix32 fert1RestorationPerUnit = 2;
 
+        foreach (CropProto crop in this.m_protosDb.All<CropProto>()) 
+        {
+
+                Log.Info($"Crop {crop.ProductProduced.Product.Id} q:{crop.ProductProduced.Quantity} ConsumedWaterPerDay: {crop.ConsumedWaterPerDay.Value.ToString()}" +
+                   $" ConsumedFertilityPerDay: {crop.ConsumedFertilityPerDay.ToFloat()}, DaysToGrow {crop.DaysToGrow}");
+
+        }
         foreach (FarmProto farm in this.m_protosDb.All<FarmProto>())
         {
-            foreach (CropProto crop in this.m_protosDb.All<CropProto>())
-            {
-                // 2. Validate: Skip if the crop produces nothing, or if it requires a greenhouse and this farm isn't one
-                if (crop.ProductProduced.IsEmpty || (!farm.IsGreenhouse && crop.RequiresGreenhouse))
+                foreach (CropProto crop in this.m_protosDb.All<CropProto>())
                 {
-                    continue;
-                }
-
-                // Create a unique ID so the solver knows this is our custom recipe
-                RecipeProto.ID recipeId = new RecipeProto.ID($"VirtualRecipe_{farm.Id.Value}_{crop.Id.Value}");
-
-                var inputs = new Lyst<RecipeInput>();
-
-                    // 3. Calculate Water (Daily consumption * Days to grow)
-                    if (crop.ConsumedWaterPerDay.IsPositive)
+                 
+                    // 1. Validate: Skip if the crop produces nothing, or if it requires a greenhouse and this farm isn't one
+                    if (crop.ProductProduced.IsEmpty || (!farm.IsGreenhouse && crop.RequiresGreenhouse))
                     {
-                        // Extract the Fix32 value from the PartialQuantity
-                        Fix32 waterPerDay = crop.GetConsumedWaterPerDay(farm).Value;
-
-                        // Multiply by days and cast into a strict Quantity struct
-                        Quantity totalWater = new Quantity( (waterPerDay * Fix32.FromInt(crop.DaysToGrow)).IntegerPart);
-
-                        inputs.Add(new RecipeInput(water, totalWater));
+                        continue;
                     }
 
-                    // 4. Calculate Fertilizer (Total Fertility % drained / 2%)
+                    // 2. Create the unique ID 
+                    RecipeProto.ID recipeId = new RecipeProto.ID($"VirtualRecipe_{farm.Id.Value}_{crop.Id.Value}");
+                    string sdebug = $"VirtualRecipe_{farm.Id.Value}_{crop.Id.Value}";
+
+                    // SCALE FACTOR: We multiply everything by 100 to save the decimal places!
+                    //int scale = 100;
+                    //Fix32 fScale = Fix32.FromInt(scale);
+
+                    var inputs = new Lyst<RecipeInput>();
+
+                    // 3. Calculate Water 
+                    if (crop.ConsumedWaterPerDay.IsPositive)
+                    {
+                        Fix32 waterPerDay = crop.GetConsumedWaterPerDay(farm).Value;
+                        Fix32 exactWater = waterPerDay * Fix32.FromInt(crop.DaysToGrow);
+
+                        // Scale by 100 and cast to Integer
+                        Quantity scaledWater = new Quantity(exactWater.IntegerPart);
+                        inputs.Add(new RecipeInput(water, scaledWater));
+                        sdebug += $" waterPerDay = {waterPerDay.ToString()} Recipe: {scaledWater.Value}";
+                    }
+
+                    // 4. Calculate Fertilizer
                     Percent dailyFertility = crop.GetConsumedFertilityPerDay(farm);
-                if (dailyFertility.IsPositive)
-                {
-                    // Multiply daily percent by total days
-                    Fix32 totalFertilityDrained = dailyFertility.ToFix32() * crop.DaysToGrow;
+                    if (dailyFertility.IsPositive)
+                    {
+                        // .ToFix32() already converts 2% to 0.02.
+                        Fix32 totalFertDrained = dailyFertility.ToFix32() * Fix32.FromInt(crop.DaysToGrow);
 
-                    // Calculate how many physical units of Fertilizer I are required
-                    Quantity totalFertNeeded = new Quantity( (totalFertilityDrained / fert1RestorationPerUnit).IntegerPart);
+                        // Fertilizer I restores 2% per unit (0.02 in Fix32 math)
+                        Fix32 fert1Restoration = Fix32.FromInt(2) / Fix32.FromInt(100);
 
-                    inputs.Add(new RecipeInput(fertChem1, totalFertNeeded));
+                        Fix32 exactFert = totalFertDrained / fert1Restoration;
+
+                        // Scale by 100 and cast to Integer
+                        Quantity scaledFert = new Quantity(exactFert.IntegerPart);
+                        inputs.Add(new RecipeInput(fertChem1, scaledFert));
+                        sdebug += $" dailyFertility = {dailyFertility.ToString()} Recipe: {scaledFert.Value}";
+                    }
+
+                    // 5. Calculate Output
+                    var outputs = new Lyst<RecipeOutput>();
+                    ProductQuantity exactYield = crop.GetProductProduced(farm);
+
+                    //int nMonth= crop.DaysToGrow / 30;
+                    outputs.Add(new RecipeOutput(exactYield.Product, exactYield.Quantity));
+                    sdebug += $" Prod: {exactYield.Quantity } ";
+                    // 6. Assemble the Virtual Recipe
+                    var virtualRecipe = new RecipeProto(
+                        id: recipeId,
+                        strings: crop.Strings,
+                        //duration: (crop.DaysToGrow * 100).Days(), // CRITICAL: Scale time by 100 so per-minute rates match!
+                        duration: crop.DaysToGrow.Days(), 
+                        allInputs: inputs.ToImmutableArray(),
+                        allOutputs: outputs.ToImmutableArray(),
+                        minUtilization: Percent.Hundred
+                    );
+
+                    // 7. Inject it into your Catalog dictionary
+                    this.m_farmByRecipe[virtualRecipe] = farm;
+                    Log.Info(sdebug);
                 }
-
-                // 5. Calculate Output (Base yield * Farm Tier Multiplier)
-                var outputs = new Lyst<RecipeOutput>();
-                ProductQuantity finalYield = crop.GetProductProduced(farm);
-                outputs.Add(new RecipeOutput(finalYield.Product, finalYield.Quantity));
-
-                // 6. Assemble the Virtual Recipe
-                var virtualRecipe = new RecipeProto(
-                    id: recipeId,
-                    strings: crop.Strings, // Inherit the localized name of the crop (e.g., "Potatoes")
-                    duration: crop.DaysToGrow.Days(), // Use the native .Days() extension for Mafi Durations
-                    allInputs: inputs.ToImmutableArray(),
-                    allOutputs: outputs.ToImmutableArray(),
-                    minUtilization: Percent.Hundred
-                );
-
-                // 7. Inject it into your Catalog dictionary
-                this.m_farmByRecipe[virtualRecipe] = farm;
             }
-        }
     }
 
     private void indexRecipesByOutput(Dictionary<ProductProto, List<RecipeProto>> index, RecipeProto recipe)
