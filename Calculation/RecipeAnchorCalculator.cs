@@ -9,7 +9,7 @@ namespace ProductionCalculator.Core.Calculation
     /// Represents the total machine requirement for a specific recipe.
     /// Used by the UI to list required buildings.
     /// </summary>
-    public readonly struct RecipeBuildingTotals
+    /*public readonly struct RecipeBuildingTotals
     {
         public RecipeProto Recipe { get; }
         public MachineProto Machine { get; }
@@ -23,21 +23,8 @@ namespace ProductionCalculator.Core.Calculation
         }
     }
 
-    /// <summary>
-    /// Handles the conversion of recipe quantities (per cycle) into 
-    /// production rates (per minute).
-    /// </summary>
-    public static class RecipeRateCalculator
-    {
-        private static readonly Fix32 s_ticksPerMinute = DurationExtensions.Seconds(60).Ticks;
 
-        public static Fix32 ToPerMinute(IRecipeForUi recipe, int quantityPerCycle)
-        {
-            if (recipe.Duration.Ticks <= 0) return Fix32.Zero;
-            return s_ticksPerMinute * quantityPerCycle / recipe.Duration.Ticks;
-        }
-    }
-
+    */
     /// <summary>
     /// Determines the "Anchor Rate": The exact speed at which one machine 
     /// produces or consumes a specific product for a given recipe.

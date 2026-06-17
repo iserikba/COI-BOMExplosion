@@ -1,10 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using Mafi;
+﻿using Mafi;
 using Mafi.Collections.ImmutableCollections;
+using Mafi.Core.Buildings.Farms;
+using Mafi.Core.Factory.Machines;
 using Mafi.Core.Factory.Recipes;
 using Mafi.Core.Products;
 using ProductionCalculator.Core.Catalog;
+using System;
+using System.Collections.Generic;
 
 namespace ProductionCalculator.Core.Calculation
 {
@@ -133,13 +135,24 @@ namespace ProductionCalculator.Core.Calculation
         {
             if (recipeMachines.Count == 0) return ImmutableArray<RecipeBuildingTotals>.Empty;
 
-            var totals = new List<RecipeBuildingTotals>();
+            var totals = new List<RecipeBuildingTotals>(recipeMachines.Count);
+
             foreach (var kvp in recipeMachines)
             {
                 if (kvp.Value > s_minRate)
-                    totals.Add(new RecipeBuildingTotals(kvp.Key, catalog.GetMachineForRecipe(kvp.Key), kvp.Value));
+                {
+                    RecipeProto recipe = kvp.Key;
+                    Fix32 count = kvp.Value;
+
+                    // Ask the catalog for both. One will be null, the other will have data.
+                    MachineProto machine = catalog.GetMachineForRecipe(recipe);
+                    FarmProto farm = catalog.GetFarmForRecipe(recipe);
+
+                    totals.Add(new RecipeBuildingTotals(recipe, machine, farm, count));
+                }
             }
 
+            // Sort alphabetically by Recipe ID, then by building count
             totals.Sort((left, right) =>
             {
                 int cmp = string.Compare(left.Recipe.Id.Value, right.Recipe.Id.Value, StringComparison.Ordinal);

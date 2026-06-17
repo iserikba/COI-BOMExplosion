@@ -1,13 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Mafi;
+using Mafi.Base;
+using Mafi.Collections;
 using Mafi.Collections.ImmutableCollections;
+using Mafi.Core;
 using Mafi.Core.Buildings.Farms;
 using Mafi.Core.Factory.Machines;
 using Mafi.Core.Factory.Recipes;
 using Mafi.Core.Products;
 using Mafi.Core.Prototypes;
 using ProductionCalculator.Core.Calculation;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using static Mafi.Core.Factory.NuclearReactors.NuclearReactor;
 
 namespace ProductionCalculator.Core.Catalog
 {
@@ -54,8 +59,7 @@ namespace ProductionCalculator.Core.Catalog
                 }
             }
 
-
-            // 2. Index Recipes: Build the Input and Output dictionary maps.
+            // 2. Index Normal Recipes: Build the Input and Output dictionary maps.
             foreach (RecipeProto recipe in this.m_protosDb.All<RecipeProto>())
             {
                 if (recipe != null && recipe.Duration.Ticks > 0)
@@ -66,19 +70,24 @@ namespace ProductionCalculator.Core.Catalog
                 }
             }
 
-            // 3. Index Farm : Build the Input and Output dictionary maps.
-            foreach (FarmProto farm in this.m_protosDb.All<FarmProto>())
+            // 3. Generate our custom farm recipes
+            GenerateVirtualFarmRecipes();
+
+            // 4. THE MISSING LINK: Index the newly generated farm recipes
+            // We loop through the keys we just created and add them to the main search lists.
+            foreach (RecipeProto virtualRecipe in this.m_farmByRecipe.Keys)
             {
-                foreach (RecipeProto recipe in farm.Recipes)
-                {
-                    if (recipe != null && !this.m_farmByRecipe.ContainsKey(recipe)) 
-                        this.m_farmByRecipe[recipe] = farm;
-                }
+                recipeList.Add(virtualRecipe);
+                this.indexRecipesByOutput(byOutput, virtualRecipe);
+                this.indexRecipesByInput(byInput, virtualRecipe);
             }
 
+            // 5. Finalize the immutable lookup tables
             this.m_allRecipes = recipeList.ToImmutableArray();
             this.m_recipesByOutput = buildLookup(byOutput);
             this.m_recipesByInput = buildLookup(byInput);
+
+            Log.Info($"RecipeCatalog initialized. Total recipes indexed: {this.m_allRecipes.Length}");
         }
 
         public MachineProto GetMachineForRecipe(RecipeProto recipe) =>
@@ -119,7 +128,78 @@ namespace ProductionCalculator.Core.Catalog
 
         // --- INDEXING HELPERS ---
 
-        private void indexRecipesByOutput(Dictionary<ProductProto, List<RecipeProto>> index, RecipeProto recipe)
+    private void GenerateVirtualFarmRecipes()
+    {
+        // 1. Retrieve the base product templates from the game's database
+        var water = this.m_protosDb.GetOrThrow<ProductProto>(IdsCore.Products.CleanWater);
+        var fertChem1 = this.m_protosDb.GetOrThrow<ProductProto>(Ids.Products.FertilizerChemical);
+
+        // Fertilizer I restores 2% fertility per 1 unit of quantity.
+        // We use Mafi's Fix32 for safe deterministic math.
+        Fix32 fert1RestorationPerUnit = 2;
+
+        foreach (FarmProto farm in this.m_protosDb.All<FarmProto>())
+        {
+            foreach (CropProto crop in this.m_protosDb.All<CropProto>())
+            {
+                // 2. Validate: Skip if the crop produces nothing, or if it requires a greenhouse and this farm isn't one
+                if (crop.ProductProduced.IsEmpty || (!farm.IsGreenhouse && crop.RequiresGreenhouse))
+                {
+                    continue;
+                }
+
+                // Create a unique ID so the solver knows this is our custom recipe
+                RecipeProto.ID recipeId = new RecipeProto.ID($"VirtualRecipe_{farm.Id.Value}_{crop.Id.Value}");
+
+                var inputs = new Lyst<RecipeInput>();
+
+                    // 3. Calculate Water (Daily consumption * Days to grow)
+                    if (crop.ConsumedWaterPerDay.IsPositive)
+                    {
+                        // Extract the Fix32 value from the PartialQuantity
+                        Fix32 waterPerDay = crop.GetConsumedWaterPerDay(farm).Value;
+
+                        // Multiply by days and cast into a strict Quantity struct
+                        Quantity totalWater = new Quantity( (waterPerDay * Fix32.FromInt(crop.DaysToGrow)).IntegerPart);
+
+                        inputs.Add(new RecipeInput(water, totalWater));
+                    }
+
+                    // 4. Calculate Fertilizer (Total Fertility % drained / 2%)
+                    Percent dailyFertility = crop.GetConsumedFertilityPerDay(farm);
+                if (dailyFertility.IsPositive)
+                {
+                    // Multiply daily percent by total days
+                    Fix32 totalFertilityDrained = dailyFertility.ToFix32() * crop.DaysToGrow;
+
+                    // Calculate how many physical units of Fertilizer I are required
+                    Quantity totalFertNeeded = new Quantity( (totalFertilityDrained / fert1RestorationPerUnit).IntegerPart);
+
+                    inputs.Add(new RecipeInput(fertChem1, totalFertNeeded));
+                }
+
+                // 5. Calculate Output (Base yield * Farm Tier Multiplier)
+                var outputs = new Lyst<RecipeOutput>();
+                ProductQuantity finalYield = crop.GetProductProduced(farm);
+                outputs.Add(new RecipeOutput(finalYield.Product, finalYield.Quantity));
+
+                // 6. Assemble the Virtual Recipe
+                var virtualRecipe = new RecipeProto(
+                    id: recipeId,
+                    strings: crop.Strings, // Inherit the localized name of the crop (e.g., "Potatoes")
+                    duration: crop.DaysToGrow.Days(), // Use the native .Days() extension for Mafi Durations
+                    allInputs: inputs.ToImmutableArray(),
+                    allOutputs: outputs.ToImmutableArray(),
+                    minUtilization: Percent.Hundred
+                );
+
+                // 7. Inject it into your Catalog dictionary
+                this.m_farmByRecipe[virtualRecipe] = farm;
+            }
+        }
+    }
+
+    private void indexRecipesByOutput(Dictionary<ProductProto, List<RecipeProto>> index, RecipeProto recipe)
         {
             foreach (var output in recipe.AllUserVisibleOutputs)
                 if (!output.HideInUi && shouldIncludeProduct(output.Product))
