@@ -1,8 +1,9 @@
 ﻿{
 	"id": "BOMExplosion",
-	"version": "0.0.1",
+	"version": "0.2.0",
 	"primary_dlls": [ "BOMExplosion.dll" ],
 	"non_locking_dll_load": true,
+	"min_game_version": "0.8.4",
 	"max_verified_game_version": "0.8.5",
 	"display_name": "Bill of Materials Explosion",
 	"description_short": "Material Requirements Planning for CoI. Calculate production chains, inputs and outputs planned products.",
