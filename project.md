@@ -1,3 +1,27 @@
+### 🚜 Production Calculator Mod - Update Changelog
+
+**✨ New Features & Mechanics**
+
+* **Interactive Production Chains:** Enhanced the core solver UI, allowing users to dynamically build and expand production chains simply by clicking directly on product icons.
+* **Complete Farm & Greenhouse Integration:** Engineered a custom `GenerateVirtualFarmRecipes` system that perfectly translates the game's abstract agricultural math into standard, solver-friendly recipes.
+* **Dynamic Fertility Math:** The calculator now accurately calculates **Fertilizer I** requirements based on the hidden `ConsumedFertilityPerDay` variable for every unique crop (calculating at a perfect 2% restoration rate).
+* **Tiered Yield Multipliers:** Crops now accurately reflect the +50% production bonus for Tier II Irrigated Farms and the +100% bonus for Tier III Greenhouses.
+* **Tier 1 Farm Filtering:** The solver intelligently ignores basic rain-fed farms (`!HasIrrigationAndFertilizerSupport`), keeping calculations strictly focused on controllable, piped setups.
+
+**🖥️ UI & Presentation Upgrades**
+
+* **Universal Building Support:** Upgraded the `RecipeBuildingTotals` structure to handle both `MachineProto` and `FarmProto` objects simultaneously.
+* **Dynamic Icon Rendering:** Patched the left panel and main UI rows to automatically fetch and draw the correct building icons for Farms and Greenhouses, fixing the "invisible icon" bug.
+* **Contextual UI Text:** Tooltips and labels now intelligently switch terminology, displaying the localized string for "farms" instead of "machines" when viewing agricultural recipes.
+
+**⚙️ Under the Hood (Engine & Stability)**
+
+* **Bypassed Unity Native Crashes:** Scrapped `Newtonsoft.Json` serialization in favor of a custom, crash-proof C# Reflection "Sniper" script to safely extract deeply nested game variables without triggering the engine's memory protection.
+* **Mastered Deterministic Math:** Resolved severe integer truncation bugs and `Fix32` calculation core overflows by properly aligning `Percent`, `PartialQuantity`, and `Quantity` structs to the crop's `DaysToGrow` scale.
+* **Future-Proofed Database Lookups:** Swapped raw string lookups for the engine's official static ID constants (`IdsCore.Products.CleanWater` and `Ids.Products.FertilizerChemical`), guaranteeing the mod won't break if the developers rename assets in future updates.
+
+---
+
 CROP DATA -> Crop_NoCrop: Needs 0 Water for 90 days -> Yields 0 Nothing
  CROP DATA -> Crop_GreenManure: Needs 0.9003906 Water for 60 days -> Yields 0 Nothing
  CROP DATA -> Crop_Potato: Needs 1.200195 Water for 90 days -> Yields 58 Product_Potato

@@ -138,17 +138,23 @@ namespace ProductionCalculator.Core.Catalog
         // We use Mafi's Fix32 for safe deterministic math.
         Fix32 fert1RestorationPerUnit = 2;
 
-        foreach (CropProto crop in this.m_protosDb.All<CropProto>()) 
-        {
+        //foreach (CropProto crop in this.m_protosDb.All<CropProto>()) 
+        //{
 
-                Log.Info($"Crop {crop.ProductProduced.Product.Id} q:{crop.ProductProduced.Quantity} ConsumedWaterPerDay: {crop.ConsumedWaterPerDay.Value.ToString()}" +
-                   $" ConsumedFertilityPerDay: {crop.ConsumedFertilityPerDay.ToFloat()}, DaysToGrow {crop.DaysToGrow}");
+        //        Log.Info($"Crop {crop.ProductProduced.Product.Id} q:{crop.ProductProduced.Quantity} ConsumedWaterPerDay: {crop.ConsumedWaterPerDay.Value.ToString()}" +
+        //           $" ConsumedFertilityPerDay: {crop.ConsumedFertilityPerDay.ToFloat()}, DaysToGrow {crop.DaysToGrow}");
 
-        }
+        //}
         foreach (FarmProto farm in this.m_protosDb.All<FarmProto>())
         {
-                foreach (CropProto crop in this.m_protosDb.All<CropProto>())
-                {
+            // 1. Exclude Tier 1 Farms: If it can't accept piped water/fertilizer, skip it.
+            if (!farm.HasIrrigationAndFertilizerSupport)
+            {
+                    continue;
+            }
+
+            foreach (CropProto crop in this.m_protosDb.All<CropProto>())
+            {
                  
                     // 1. Validate: Skip if the crop produces nothing, or if it requires a greenhouse and this farm isn't one
                     if (crop.ProductProduced.IsEmpty || (!farm.IsGreenhouse && crop.RequiresGreenhouse))
@@ -158,7 +164,7 @@ namespace ProductionCalculator.Core.Catalog
 
                     // 2. Create the unique ID 
                     RecipeProto.ID recipeId = new RecipeProto.ID($"VirtualRecipe_{farm.Id.Value}_{crop.Id.Value}");
-                    string sdebug = $"VirtualRecipe_{farm.Id.Value}_{crop.Id.Value}";
+                    //string sdebug = $"VirtualRecipe_{farm.Id.Value}_{crop.Id.Value}";
 
                     // SCALE FACTOR: We multiply everything by 100 to save the decimal places!
                     //int scale = 100;
@@ -175,7 +181,7 @@ namespace ProductionCalculator.Core.Catalog
                         // Scale by 100 and cast to Integer
                         Quantity scaledWater = new Quantity(exactWater.IntegerPart);
                         inputs.Add(new RecipeInput(water, scaledWater));
-                        sdebug += $" waterPerDay = {waterPerDay.ToString()} Recipe: {scaledWater.Value}";
+                        //sdebug += $" waterPerDay = {waterPerDay.ToString()} Recipe: {scaledWater.Value}";
                     }
 
                     // 4. Calculate Fertilizer
@@ -193,7 +199,7 @@ namespace ProductionCalculator.Core.Catalog
                         // Scale by 100 and cast to Integer
                         Quantity scaledFert = new Quantity(exactFert.IntegerPart);
                         inputs.Add(new RecipeInput(fertChem1, scaledFert));
-                        sdebug += $" dailyFertility = {dailyFertility.ToString()} Recipe: {scaledFert.Value}";
+                        //sdebug += $" dailyFertility = {dailyFertility.ToString()} Recipe: {scaledFert.Value}";
                     }
 
                     // 5. Calculate Output
@@ -202,7 +208,7 @@ namespace ProductionCalculator.Core.Catalog
 
                     //int nMonth= crop.DaysToGrow / 30;
                     outputs.Add(new RecipeOutput(exactYield.Product, exactYield.Quantity));
-                    sdebug += $" Prod: {exactYield.Quantity } ";
+                    //sdebug += $" Prod: {exactYield.Quantity } ";
                     // 6. Assemble the Virtual Recipe
                     var virtualRecipe = new RecipeProto(
                         id: recipeId,
@@ -216,9 +222,9 @@ namespace ProductionCalculator.Core.Catalog
 
                     // 7. Inject it into your Catalog dictionary
                     this.m_farmByRecipe[virtualRecipe] = farm;
-                    Log.Info(sdebug);
-                }
+                    //Log.Info(sdebug);
             }
+        }
     }
 
     private void indexRecipesByOutput(Dictionary<ProductProto, List<RecipeProto>> index, RecipeProto recipe)

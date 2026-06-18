@@ -1,5 +1,5 @@
-﻿using System;
-using Mafi;
+﻿using Mafi;
+using Mafi.Core.Buildings.Farms;
 using Mafi.Core.Factory.Machines;
 using Mafi.Core.Factory.Recipes;
 using Mafi.Core.Products;
@@ -9,6 +9,7 @@ using Mafi.Unity.UiToolkit.Component;
 using Mafi.Unity.UiToolkit.Library;
 using ProductionCalculator.Core.Calculation;
 using ProductionCalculator.Core.Catalog;
+using System;
 
 namespace ProductionCalculator.Ui
 {
@@ -23,12 +24,23 @@ namespace ProductionCalculator.Ui
         {
             Row row = new Row(2.pt()).AlignItemsCenterMiddle();
 
+            // 1. Ask the catalog for both possible buildings
             MachineProto machineForRecipe = catalog.GetMachineForRecipe(recipe);
+            FarmProto farmForRecipe = catalog.GetFarmForRecipe(recipe);
+
+            // 2. Draw Machine Icon if it exists
             if (machineForRecipe != null)
             {
                 row.Add(new Icon(machineForRecipe, false, false)
                     .Size(MachineIconSize)
                     .Tooltip(machineForRecipe.Strings.Name, true, false, false));
+            }
+            // 3. Draw Farm Icon if the machine was null but a farm exists
+            else if (farmForRecipe != null)
+            {
+                row.Add(new Icon(farmForRecipe, false, false)
+                    .Size(MachineIconSize) // Assuming MachineIconSize is the standard height for this row
+                    .Tooltip(farmForRecipe.Strings.Name, true, false, false));
             }
 
             row.Add(createInputsRow(recipe));

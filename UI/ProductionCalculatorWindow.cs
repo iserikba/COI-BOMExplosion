@@ -328,11 +328,19 @@ namespace ProductionCalculator.Ui
         {
             Row row = new Row(2.pt()).AlignItemsCenterMiddle().MarginBottom(1.pt());
 
+            // 1. Draw Machine Icon if it is a machine
             if (entry.Machine != null)
             {
                 row.Add(new Icon(entry.Machine, false, false)
                     .Size(BuildingIconSize)
                     .Tooltip(entry.Machine.Strings.Name, true, false, false));
+            }
+            // 2. Draw Farm Icon if it is a farm
+            else if (entry.Farm != null)
+            {
+                row.Add(new Icon(entry.Farm, false, false)
+                    .Size(BuildingIconSize)
+                    .Tooltip(entry.Farm.Strings.Name, true, false, false));
             }
 
             Column column = new Column(0.pt());
@@ -340,7 +348,10 @@ namespace ProductionCalculator.Ui
 
             Row countRow = new Row(1.pt());
             countRow.Add(new Label(formatMachineCount(entry.MachineCount).ToString().AsLoc()).FontBold());
-            countRow.Add(new Label(Tr.MachineCount).Opacity(0.8f));
+
+            // Optional: You can customize the label text so it doesn't say "1.8 machines" for farms
+            string labelText = entry.Farm != null ? " farms" : Tr.MachineCount.TranslatedString;
+            countRow.Add(new Label(labelText.AsLoc()).Opacity(0.8f));
 
             column.Add(countRow);
             row.Add(column.FlexGrow(1f));
