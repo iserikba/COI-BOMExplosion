@@ -7,52 +7,38 @@ using UnityEngine;
 
 namespace ProductionCalculator.Ui
 {
-	// Token: 0x02000007 RID: 7
-	[GlobalDependency((Mafi.RegistrationMode)3, false, false)]
-	public sealed class ProductionCalculatorUiController : WindowController<ProductionCalculatorWindow>, IToolbarItemController, IUnityInputController
-	{
-		// Token: 0x17000005 RID: 5
-		// (get) Token: 0x0600001B RID: 27 RVA: 0x0000288F File Offset: 0x00000A8F
-		public bool IsVisible
-		{
-			get
-			{
-				return true;
-			}
-		}
+    // RegistrationMode.AsEverything is the enum value for '3'
+    [GlobalDependency(RegistrationMode.AsEverything, false, false)]
+    public sealed class ProductionCalculatorUiController : WindowController<ProductionCalculatorWindow>, IToolbarItemController, IUnityInputController
+    {
+        private const string ToolbarIconPath = "Assets/Unity/UserInterface/Toolbar/Stats.svg";
+        private const float ToolbarOrder = 905f;
 
-		// Token: 0x17000006 RID: 6
-		// (get) Token: 0x0600001C RID: 28 RVA: 0x00002892 File Offset: 0x00000A92
-		public bool DeactivateShortcutsIfNotVisible
-		{
-			get
-			{
-				return true;
-			}
-		}
+        // Modern expression-bodied properties for cleaner syntax
+        public bool IsVisible => true;
+        public bool DeactivateShortcutsIfNotVisible => true;
 
+        // Required by the IToolbarItemController interface
+        public event Action<IToolbarItemController> VisibilityChanged;
 
-		public event Action<IToolbarItemController> VisibilityChanged;
+        public ProductionCalculatorUiController(ControllerContext controllerContext, ToolbarHud toolbar)
+            : base(controllerContext, null)
+        {
+            // Utilizing the constants and proper Enum names instead of magic numbers
+            toolbar.AddMainMenuButton(
+                Tr.WindowTitle,
+                this,
+                ToolbarIconPath,
+                ToolbarOrder,
+                (ShortcutsManager sm) => KeyBindings.FromKey(KbCategory.Tools, ShortcutMode.Game, KeyCode.F10)
+            );
 
-		// Token: 0x0600001F RID: 31 RVA: 0x00002908 File Offset: 0x00000B08
-		public ProductionCalculatorUiController(ControllerContext controllerContext, ToolbarHud toolbar) : base(controllerContext, null)
-		{
-			toolbar.AddMainMenuButton(Tr.WindowTitle, this, "Assets/Unity/UserInterface/Toolbar/Stats.svg", 905f, 
-				(ShortcutsManager sm) => KeyBindings.FromKey((KbCategory)2,(ShortcutMode) 1,(KeyCode) 291)
-				);
-			Log.Info("ProductionCalculator: toolbar button registered (F10)");
-		}
+            Log.Info("ProductionCalculator: Toolbar button registered (F10)");
+        }
 
-		// Token: 0x06000020 RID: 32 RVA: 0x0000296A File Offset: 0x00000B6A
-		protected override void OnActivate()
-		{
-			base.Window.RefreshPreview();
-		}
-
-		// Token: 0x0400002E RID: 46
-		private const string ToolbarIconPath = "Assets/Unity/UserInterface/Toolbar/Stats.svg";
-
-		// Token: 0x0400002F RID: 47
-		private const float ToolbarOrder = 905f;
-	}
+        protected override void OnActivate()
+        {
+            base.Window.RefreshPreview();
+        }
+    }
 }
